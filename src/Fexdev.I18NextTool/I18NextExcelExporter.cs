@@ -39,26 +39,62 @@ public class I18NextExcelExporter
         }
     }
 
-    private IWorkbook ExportToExcel(List<LanguagePathValue> values)
+    public IWorkbook ExportToExcel(List<LanguagePathValue> values)
     {
+        //         Path                lang   value
+        Dictionary<string, Dictionary<string, string>> map = new();
+        HashSet<string> languages = new();
+
+        foreach (var item in values)
+        {
+            if (!map.TryGetValue(item.Path, out var languageValues))
+            {
+                languageValues = new();
+                map[item.Path] = languageValues;
+            }
+
+            languageValues.Add(item.Language, item.Value);
+            languages.Add(item.Language);
+        }
+
         var workbook = new XSSFWorkbook();
         var sheet = workbook.CreateSheet("Translations");
-        var headerRow = sheet.CreateRow(0);
-        headerRow.CreateCell(0).SetCellValue("Key");
-        headerRow.CreateCell(1).SetCellValue("en_EN");
 
-        int rowIndex = 1;
+        int rowIndex = 0;
         int columnIndex = 0;
-        foreach (var item in values)
+        var headerRow = sheet.CreateRow(rowIndex);
+        headerRow.CreateCell(columnIndex++).SetCellValue("Key");
+        foreach (var lang in languages)
+        {
+            headerRow.CreateCell(columnIndex++).SetCellValue(lang);
+        }
+
+        rowIndex = 1;
+        columnIndex = 0;
+
+        var orderedPaths = map.Keys.OrderBy(k => k);
+        foreach (var path in orderedPaths)
         {
             columnIndex = 0;
             var row = sheet.CreateRow(rowIndex++);
-            row.CreateCell(columnIndex++).SetCellValue(item.Path);
-            row.CreateCell(columnIndex++).SetCellValue(item.Value);
+            var languageValues = map[path];
+
+            row.CreateCell(columnIndex++).SetCellValue(path);
+            foreach (var lang in languages)
+            {
+                if (languageValues.TryGetValue(lang, out var value))
+                {
+                    row.CreateCell(columnIndex).SetCellValue(lang);
+                }
+
+                columnIndex++;
+            }
         }
 
-        sheet.AutoSizeColumn(0);
-        sheet.AutoSizeColumn(1);
+        for (int i = 0; i < languages.Count; i++)
+        {
+            sheet.AutoSizeColumn(i);
+        }
 
         return workbook;
     }

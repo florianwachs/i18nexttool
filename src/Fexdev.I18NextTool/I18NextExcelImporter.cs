@@ -4,7 +4,7 @@ namespace Fexdev.I18NextTool
 {
     public class I18NextExcelImporter
     {
-        private JsonObject Build(IReadOnlyCollection<PathAndValue> items)
+        private JsonObject Build(IReadOnlyCollection<LanguagePathValue> items)
         {
             var rootObj = new JsonObject();
 
@@ -16,7 +16,6 @@ namespace Fexdev.I18NextTool
             }
 
             return rootObj;
-
         }
 
         // TODO: Switch expression
